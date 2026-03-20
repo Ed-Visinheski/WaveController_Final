@@ -4,15 +4,12 @@ project(WaveControllerFinal)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-# Let IDEs/tools (e.g. VS Code IntelliSense) pick up compiler flags from compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Enable Qt automatic features (moc/uic/rcc) if Qt is available
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Prefer Qt6 but fall back to Qt5 if necessary
 find_package(Qt6 COMPONENTS Core Gui Widgets Multimedia QUIET)
 if(Qt6_FOUND)
 	message(STATUS "Found Qt6")
