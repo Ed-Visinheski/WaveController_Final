@@ -10,21 +10,23 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 COMPONENTS Core Gui Widgets Multimedia QUIET)
+find_package(Qt6 COMPONENTS Core Gui Widgets Multimedia Network QUIET)
 if(Qt6_FOUND)
 	message(STATUS "Found Qt6")
 	set(QT_CORE Qt6::Core)
 	set(QT_GUI Qt6::Gui)
 	set(QT_WIDGETS Qt6::Widgets)
 	set(QT_MULTIMEDIA Qt6::Multimedia)
+	set(QT_NETWORK Qt6::Network)
 else()
-	find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia QUIET)
+	find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia Network QUIET)
 	if(Qt5_FOUND)
 		message(STATUS "Found Qt5")
 		set(QT_CORE Qt5::Core)
 		set(QT_GUI Qt5::Gui)
 		set(QT_WIDGETS Qt5::Widgets)
 		set(QT_MULTIMEDIA Qt5::Multimedia)
+		set(QT_NETWORK Qt5::Network)
 	endif()
 endif()
 
@@ -36,6 +38,8 @@ include_directories(/opt/homebrew/include)
 
 add_executable(WaveControllerFinal main.cpp)
 
+add_subdirectory(wave)
+
 # Link Qt libraries if available
 if(Qt6_FOUND OR Qt5_FOUND)
 	target_link_libraries(WaveControllerFinal PRIVATE 
@@ -43,16 +47,8 @@ if(Qt6_FOUND OR Qt5_FOUND)
 		${QT_GUI} 
 		${QT_WIDGETS}
 		${QT_MULTIMEDIA}
+		${QT_NETWORK}
 	)
-	
-	if(TARGET WaveControllerFinal)
-	    target_link_libraries(WaveControllerFinal PRIVATE 
-	        ${QT_CORE} 
-	        ${QT_GUI} 
-	        ${QT_WIDGETS}
-	        ${QT_MULTIMEDIA}
-	    )
-	endif()
 endif()
 
 # Link PortAudio and SDL2 if found
