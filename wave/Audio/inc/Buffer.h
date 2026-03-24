@@ -4,6 +4,7 @@
 #include <cstring>
 #include <array>
 #include <algorithm>
+#include "Constants.h"
 
 /**
  * @details This Buffer Class is an implementation of the Ring Buffer Data Structure
@@ -39,8 +40,8 @@ private:
     size_t calculateAvailableRead(size_t readIndex, size_t writeIndex) const;
     size_t calculateAvailableWrite(size_t writeIndex, size_t readIndex) const;
 
-    static constexpr size_t BUFFER_CAPACITY {8193};
-    std::array<double, BUFFER_CAPACITY> m_buffer{};
+    static constexpr size_t RING_BUFFER_CAPACITY {AudioConstants::BUFFER_SIZE + 1};
+    std::array<double, RING_BUFFER_CAPACITY> m_buffer{};
     std::atomic<size_t> m_writeIndex;
     std::atomic<size_t> m_readIndex;
 };

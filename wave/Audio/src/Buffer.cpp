@@ -15,7 +15,7 @@ size_t CBuffer::write(const double* data, size_t count)
         return 0;
     }
     
-    const size_t remainingElementsInBuffer = BUFFER_CAPACITY - writeIndex;
+    const size_t remainingElementsInBuffer = RING_BUFFER_CAPACITY - writeIndex;
     const size_t numOfElementsInFirstChunk = std::min(numOfElementsToWrite, remainingElementsInBuffer);
     std::memcpy(&m_buffer[writeIndex], data, numOfElementsInFirstChunk * sizeof(double));
     
@@ -24,7 +24,7 @@ size_t CBuffer::write(const double* data, size_t count)
         std::memcpy(&m_buffer[0], data + numOfElementsInFirstChunk, (numOfElementsToWrite - numOfElementsInFirstChunk) * sizeof(double));
     }
     
-    m_writeIndex.store((writeIndex + numOfElementsToWrite) % BUFFER_CAPACITY, std::memory_order_release);
+    m_writeIndex.store((writeIndex + numOfElementsToWrite) % RING_BUFFER_CAPACITY, std::memory_order_release);
     return numOfElementsToWrite;
 }
 
@@ -41,7 +41,7 @@ size_t CBuffer::read(double* data, size_t count)
         return 0;
     }
     
-    const size_t remainingElementsInBuffer = BUFFER_CAPACITY - readIndex; 
+    const size_t remainingElementsInBuffer = RING_BUFFER_CAPACITY - readIndex; 
     const size_t numOfElementsInFirstChunk = std::min(numOfElementsToRead, remainingElementsInBuffer);
     std::memcpy(data, &m_buffer[readIndex], numOfElementsInFirstChunk * sizeof(double));
     
@@ -50,7 +50,7 @@ size_t CBuffer::read(double* data, size_t count)
         std::memcpy(data + numOfElementsInFirstChunk, &m_buffer[0], (numOfElementsToRead - numOfElementsInFirstChunk) * sizeof(double));
     }
     
-    m_readIndex.store((readIndex + numOfElementsToRead) % BUFFER_CAPACITY, std::memory_order_release);
+    m_readIndex.store((readIndex + numOfElementsToRead) % RING_BUFFER_CAPACITY, std::memory_order_release);
     return numOfElementsToRead;
 }
 
@@ -67,7 +67,7 @@ size_t CBuffer::peek(double* data, size_t count) const
         return 0;
     }
     
-    const size_t remainingElementsInBuffer = BUFFER_CAPACITY - readIndex; 
+    const size_t remainingElementsInBuffer = RING_BUFFER_CAPACITY - readIndex; 
     const size_t numOfElementsInFirstChunk = std::min(numOfElementsToRead, remainingElementsInBuffer);
     std::memcpy(data, &m_buffer[readIndex], numOfElementsInFirstChunk * sizeof(double));
     
@@ -106,14 +106,14 @@ size_t CBuffer::calculateAvailableRead(size_t readIndex, size_t writeIndex) cons
     } 
     else 
     {
-        return BUFFER_CAPACITY - readIndex + writeIndex;
+        return RING_BUFFER_CAPACITY - readIndex + writeIndex;
     }
 }
 
 size_t CBuffer::calculateAvailableWrite(size_t writeIndex, size_t readIndex) const 
 {
     const size_t availableRead = calculateAvailableRead(readIndex, writeIndex);
-    return BUFFER_CAPACITY - availableRead - 1; //-1 needed to differentiate full from empty - empty is when readIndex == writeIndex
+    return RING_BUFFER_CAPACITY - availableRead - 1; //-1 needed to differentiate full from empty - empty is when readIndex == writeIndex
 }
 
 
