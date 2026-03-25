@@ -26,7 +26,7 @@ public:
         bool visible = true;
 
         std::atomic<bool> swapRequested;
-        
+
         std::vector<double> backBuffer;
         std::vector<double> frontBuffer;
 
@@ -45,7 +45,7 @@ public:
     void drawLabels(QPainter& painter);
     size_t findTriggerPoint(const std::vector<double>& samples) const;
     
-    size_t addChannel(const std::string& name, const QColor& color);
+    void addChannel(const std::string& name, const QColor& color);
     void updateChannel(size_t channelIndex, const std::vector<double>& samples);
     void updateChannelFromBuffer(size_t channelIndex, CBuffer& buffer);
 
