@@ -1,10 +1,15 @@
 #include <iostream>
+#include <QApplication>
+#include "WaveController.h"
 
 
 
 int main(int argc, char *argv[]) 
 {
-    std::cout<<"Hello World!"<<std::endl;
-};
+    QApplication app(argc, argv);
+    CWaveController controller;
+    
+    return app.exec();
+}
 
 

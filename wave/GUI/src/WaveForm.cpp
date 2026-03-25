@@ -131,7 +131,7 @@ void CWaveform::drawGrid(QPainter& painter, int w, int h)
         painter.drawLine(x, 0, x, h);
     }
 
-    // Center line!
+    // Center line!!!!
     painter.setPen(QColor(80, 80, 90));
     painter.drawLine(0, h / 2, w, h / 2);
 }
