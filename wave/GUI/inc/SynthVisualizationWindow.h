@@ -11,11 +11,11 @@
 #include <QStatusBar>
 #include <QTimer>
 #include <QDebug>
-#include <memory>
 #include "WaveForm.h"
 #include "HarmonicControlPanel.h"
 #include "AudioGenerator.h"
 #include "Constants.h"
+#include "SpectrumAnalyzer.h"
 
 class CSynthVisualizationWindow : public QMainWindow 
 {
@@ -35,6 +35,7 @@ private:
 
     CAudioGenerator* m_audioGenerator;    
     CWaveform* m_waveformView {nullptr};
+    CSpectrumAnalyzer* m_spectrumAnalyzer = nullptr;
     CHarmonicControlPanel* m_harmonicPanel {nullptr};
     
 

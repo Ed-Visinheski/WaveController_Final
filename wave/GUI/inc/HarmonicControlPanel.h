@@ -16,7 +16,7 @@ class CHarmonicControlPanel : public QWidget
     Q_OBJECT
 
 public:
-    struct HarmonicControl 
+    struct SHarmonicControl 
     {
         int harmonicNumber;
         
@@ -49,7 +49,7 @@ private:
     int m_numHarmonics;
     double m_fundamental = 440.0;
 
-    std::vector<HarmonicControl> m_controls;
+    std::vector<SHarmonicControl> m_controls;
 
 signals:
     void parametersChanged();

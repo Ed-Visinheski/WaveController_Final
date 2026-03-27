@@ -141,7 +141,7 @@ void CHarmonicControlPanel::setupUI()
     
     for (int i = 0; i < m_numHarmonics; ++i) 
     {
-        HarmonicControl control;
+        SHarmonicControl control;
         control.harmonicNumber = i + 1;
         
         auto* rowWidget = new QWidget();

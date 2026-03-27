@@ -48,6 +48,17 @@ void CSynthVisualizationWindow::setupUI()
     
     waveformLayout->addWidget(m_waveformView);
     splitter->addWidget(waveformBox);
+
+    auto* spectrumBox = new QGroupBox("Frequency Domain");
+    auto* spectrumLayout = new QVBoxLayout(spectrumBox);
+    
+    m_spectrumAnalyzer = new CSpectrumAnalyzer(44100);
+    m_spectrumAnalyzer->setLogScale(true);
+    m_spectrumAnalyzer->setShowPeaks(true);
+    m_spectrumAnalyzer->setFrequencyRange(20, 8000);
+    
+    spectrumLayout->addWidget(m_spectrumAnalyzer);
+    splitter->addWidget(spectrumBox);
         
     auto* controlBox = new QGroupBox("Harmonic Controls");
     auto* controlLayout = new QVBoxLayout(controlBox);
@@ -114,13 +125,13 @@ void CSynthVisualizationWindow::updateVisualizations() {
     
     if (auto* mixedBuffer = m_audioGenerator->getMixedBuffer()) 
     {
-        size_t availableSamples = mixedBuffer->getAvailableRead();
-
+        // size_t availableSamples = mixedBuffer->getAvailableRead();
         // if (updateCount % 60 == 0) 
         // {
         //     qDebug() << "  Mixed buffer available samples:" << availableSamples;
         // }
-        
+
+        m_spectrumAnalyzer->updateFromRingBuffer(*mixedBuffer);        
         m_waveformView->updateChannelFromBuffer(0, *mixedBuffer);
     }
     
@@ -146,6 +157,11 @@ void CSynthVisualizationWindow::setFundamental(double frequency)
     if (m_harmonicPanel) 
     {
         m_harmonicPanel->setFundamental(frequency);
+    }
+    
+    if (m_spectrumAnalyzer) 
+    {
+        m_spectrumAnalyzer->setHarmonicMarkers(frequency, m_numHarmonics);
     }
 }
 
