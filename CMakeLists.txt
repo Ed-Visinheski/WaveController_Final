@@ -32,10 +32,6 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-find_library(PORTAUDIO_LIB portaudio PATHS /opt/homebrew/lib)
-find_library(SDL2_LIB SDL2 PATHS /opt/homebrew/lib)
-include_directories(/opt/homebrew/include)
-
 add_executable(WaveControllerFinal main.cpp)
 
 add_subdirectory(wave)
@@ -49,12 +45,4 @@ if(Qt6_FOUND OR Qt5_FOUND)
 		${QT_MULTIMEDIA}
 		${QT_NETWORK}
 	)
-endif()
-
-# Link PortAudio and SDL2 if found
-# if(PORTAUDIO_LIB)
-# 	target_link_libraries(WaveControllerFinal PRIVATE ${PORTAUDIO_LIB})
-# endif()
-# if(SDL2_LIB)
-# 	target_link_libraries(WaveControllerFinal PRIVATE ${SDL2_LIB})
-# endif() 
+endif() 
