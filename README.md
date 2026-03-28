@@ -26,7 +26,13 @@ A hand-gesture controlled harmonic synthesizer for accessible music creation and
 
 ### macOS
 
-**Requirement:** [Homebrew](https://brew.sh/) must be installed.
+**Requirements:** 
+- [Homebrew](https://brew.sh/) must be installed
+- **Xcode 15.0 or higher** - A full installation of Xcode.app from the App Store is required
+  - **Important:** Installing only the Command Line Tools is **not sufficient**
+  - Qt (qtbase and qtmultimedia) requires the full Xcode.app to compile
+  - Download Xcode from the Mac App Store
+  - After installing Xcode, launch it once to complete the setup and accept the license agreement
 
 1. Install dependencies:
    ```bash
