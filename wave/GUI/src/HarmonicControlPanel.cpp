@@ -3,6 +3,7 @@
 CHarmonicControlPanel::CHarmonicControlPanel(int numHarmonics, QWidget* parent)
                                             : QWidget(parent)
                                             , m_numHarmonics(numHarmonics)
+                                            , m_activeHarmonicCount(numHarmonics)
                                             , m_soloActive(false)
 {
     setupUI();
@@ -110,6 +111,31 @@ void CHarmonicControlPanel::setupUI()
 {
     auto* mainLayout = new QVBoxLayout(this);
     
+    auto* countBox = new QGroupBox("Active Harmonics");
+    auto* countLayout = new QHBoxLayout(countBox);
+    
+    auto* countLabel = new QLabel("Harmonics:");
+    countLayout->addWidget(countLabel);
+    
+    auto* countSlider = new QSlider(Qt::Horizontal);
+    countSlider->setRange(1, AudioConstants::MAX_HARMONICS);
+    countSlider->setValue(m_numHarmonics);
+    countSlider->setTickPosition(QSlider::TicksBelow);
+    countSlider->setTickInterval(1);
+    countLayout->addWidget(countSlider, 1);
+    
+    auto* countValueLabel = new QLabel(QString::number(m_numHarmonics));
+    countValueLabel->setMinimumWidth(30);
+    countLayout->addWidget(countValueLabel);
+    
+    connect(countSlider, &QSlider::valueChanged, this, [this, countValueLabel](int value) 
+    {
+        countValueLabel->setText(QString::number(value));
+        setActiveHarmonicCount(value);
+    });
+    
+    mainLayout->addWidget(countBox);
+    
     auto* presetBox = new QGroupBox("Waveform Presets");
     auto* presetLayout = new QHBoxLayout(presetBox);
     
@@ -210,10 +236,13 @@ void CHarmonicControlPanel::setupUI()
         
         controlsLayout->addWidget(rowWidget);
         m_controls.push_back(control);
+        m_controlWidgets.push_back(rowWidget);
     }
     
     mainLayout->addWidget(controlsBox);
     mainLayout->addStretch();
+    
+    updateVisibleControls();
 }
 
 void CHarmonicControlPanel::updateFrequencyLabels() 
@@ -235,6 +264,27 @@ void CHarmonicControlPanel::updateSoloState()
             m_soloActive = true;
             break;
         }
+    }
+}
+
+void CHarmonicControlPanel::setActiveHarmonicCount(int count) 
+{
+    if (count < 1 || count > AudioConstants::MAX_HARMONICS) 
+    {
+        return;
+    }
+    
+    m_activeHarmonicCount = count;
+    updateVisibleControls();
+    emit harmonicCountChanged(count);
+    emit parametersChanged();
+}
+
+void CHarmonicControlPanel::updateVisibleControls() 
+{
+    for (size_t i = 0; i < m_controlWidgets.size(); ++i) 
+    {
+        m_controlWidgets[i]->setVisible(i < static_cast<size_t>(m_activeHarmonicCount));
     }
 }
 

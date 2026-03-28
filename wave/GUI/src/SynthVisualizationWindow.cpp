@@ -4,6 +4,7 @@ CSynthVisualizationWindow::CSynthVisualizationWindow(CAudioGenerator* audioGen, 
     : QMainWindow(parent)
     , m_audioGenerator(audioGen)
     , m_numHarmonics(numHarmonics)
+    , m_activeHarmonicCount(numHarmonics)
 {
     setWindowTitle("Wave - Virtual Synthesizer with Hand Tracking");
     resize(1200, 900);
@@ -31,18 +32,21 @@ void CSynthVisualizationWindow::setupUI()
     m_waveformView = new CWaveform();
     
     const QColor harmonicColors[] = 
-    {   //May need to change colours for extra harminics
+    {
         QColor(255, 100, 100),  // H1 == Red
         QColor(255, 200, 100),  // H2 == Orange
         QColor(255, 255, 100),  // H3 == Yellow
-        QColor(100, 255, 100),  // H4 == Green (similar to mixed should be changed later)
+        QColor(100, 255, 100),  // H4 == Green
         QColor(100, 255, 255),  // H5 == Cyan
+        QColor(100, 150, 255),  // H6 == Light Blue
+        QColor(150, 100, 255),  // H7 == Purple
+        QColor(255, 100, 255),  // H8 == Magenta
     };
     
     for (int i = 0; i < m_numHarmonics; ++i) 
     {
         const QString name = QString("H%1 (%2 Hz)").arg(i + 1).arg(440 * (i + 1));
-        m_waveformView->addChannel(name.toStdString(), harmonicColors[i % 8]);
+        m_waveformView->addChannel(name.toStdString(), harmonicColors[i % AudioConstants::MAX_HARMONICS]);
     }
 
     
@@ -83,6 +87,7 @@ void CSynthVisualizationWindow::connectSignals()
         Q_UNUSED(harmonic);
         updateAudioParameters();
     });
+    connect(m_harmonicPanel, &CHarmonicControlPanel::harmonicCountChanged, this, &CSynthVisualizationWindow::updateActiveHarmonics);
 }
 
 void CSynthVisualizationWindow::startVisualization() 
@@ -105,9 +110,25 @@ void CSynthVisualizationWindow::updateAudioParameters()
         const double amplitude = m_harmonicPanel->getHarmonicAmplitude(i + 1);
         const double phase = m_harmonicPanel->getHarmonicPhase(i + 1);
         
+        const bool withinActiveCount = (i < m_activeHarmonicCount);
+        
         m_audioGenerator->setHarmonicAmplitude(i, amplitude);
         m_audioGenerator->setHarmonicPhase(i, phase);
-        m_audioGenerator->setHarmonicEnabled(i, amplitude > 0.0);
+        m_audioGenerator->setHarmonicEnabled(i, withinActiveCount && amplitude > 0.0);
+    }
+}
+
+void CSynthVisualizationWindow::updateActiveHarmonics(int count) 
+{
+    m_activeHarmonicCount = count;
+    
+    for (int i = 0; i < m_numHarmonics; ++i) 
+    {
+        const bool withinActiveCount = (i < m_activeHarmonicCount);
+        const bool hasAmplitude = m_harmonicPanel->getHarmonicAmplitude(i + 1) > 0.01;
+        m_waveformView->setChannelVisible(i + 1, withinActiveCount && hasAmplitude);
+        
+        m_audioGenerator->setHarmonicEnabled(i, withinActiveCount && hasAmplitude);
     }
 }
 
@@ -141,8 +162,9 @@ void CSynthVisualizationWindow::updateVisualizations() {
         {
             m_waveformView->updateChannelFromBuffer(i + 1, *harmonicBuffer);
             
-            const bool visible = m_harmonicPanel->getHarmonicAmplitude(i + 1) > 0.01;
-            m_waveformView->setChannelVisible(i + 1, visible);
+            const bool withinActiveCount = (i < m_activeHarmonicCount);
+            const bool hasAmplitude = m_harmonicPanel->getHarmonicAmplitude(i + 1) > 0.01;
+            m_waveformView->setChannelVisible(i + 1, withinActiveCount && hasAmplitude);
         }
     }
 }
