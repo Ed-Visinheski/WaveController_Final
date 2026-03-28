@@ -9,6 +9,7 @@
 #include <cmath>
 #include "KissFFTAnalyzer.h"
 #include "Buffer.h"
+#include "Constants.h"
 
 
 class CSpectrumAnalyzer : public QWidget 
@@ -19,7 +20,7 @@ public:
     static constexpr size_t FFT_SIZE = 2048;
     static constexpr int UPDATE_FPS = 30;
 
-    explicit CSpectrumAnalyzer(double sampleRate = 44100, QWidget* parent = nullptr);
+    explicit CSpectrumAnalyzer(double sampleRate = AudioConstants::SAMPLE_RATE, QWidget* parent = nullptr);
 
     void updateFromSamples(const std::vector<double>& samples);
 
@@ -32,7 +33,7 @@ public:
     void setDbRange(double minDb, double maxDb);
     
     void setFrequencyRange(double minFreq, double maxFreq);
-    void setHarmonicMarkers(double fundamental, int numHarmonics = 8);
+    void setHarmonicMarkers(double fundamental, int numHarmonics = AudioConstants::MAX_HARMONICS);
 
 protected:
     void leaveEvent(QEvent* event) override;

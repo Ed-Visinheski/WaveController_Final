@@ -151,8 +151,33 @@
             m_harmonicBuffers[harmonicIndex].write(m_harmonicSamples[harmonicIndex].data(), numOfSamples);
         }
         m_mixedBuffer.write(m_mixedSamples.data(), numOfSamples);
+        
+        if (m_recorder.isRecording()) 
+        {
+            m_recorder.writeAudioData(qtAudioSampleBuffer, numOfSamples);
+        }
 
         return total;
+    }
+    
+    bool CAudioGenerator::startRecording(const QString& filename) 
+    {
+        return m_recorder.startRecording(filename);
+    }
+    
+    void CAudioGenerator::stopRecording() 
+    {
+        m_recorder.stopRecording();
+    }
+    
+    bool CAudioGenerator::isRecording() const 
+    {
+        return m_recorder.isRecording();
+    }
+    
+    QString CAudioGenerator::getLastRecordingPath() const 
+    {
+        return m_recorder.getLastRecordingPath();
     }
 
     qint64 CAudioGenerator::writeData(const char* data, qint64 len)

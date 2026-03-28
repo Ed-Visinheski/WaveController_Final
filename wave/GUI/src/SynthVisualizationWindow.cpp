@@ -24,6 +24,29 @@ void CSynthVisualizationWindow::setupUI()
     scrollArea->setWidget(centralWidget);
 
     auto* mainLayout = new QVBoxLayout(centralWidget);
+
+    auto* recordingControlsLayout = new QHBoxLayout();
+    recordingControlsLayout->addStretch();
+    
+    m_recordButton = new QPushButton("Record");
+    m_recordButton->setCheckable(true);
+    m_recordButton->setStyleSheet
+    (
+        "QPushButton { padding: 8px 16px; font-size: 14px; font-weight: bold; }"
+        "QPushButton:checked { background-color: #ff4444; color: white; }"
+    );
+
+    connect(m_recordButton, &QPushButton::clicked, this, &CSynthVisualizationWindow::toggleRecording);
+    
+    m_recordingStatusLabel = new QLabel("");
+    m_recordingStatusLabel->setStyleSheet("font-size: 12px; color: #666;");
+    
+    recordingControlsLayout->addWidget(m_recordButton);
+    recordingControlsLayout->addWidget(m_recordingStatusLabel);
+    recordingControlsLayout->addStretch();
+    
+    mainLayout->addLayout(recordingControlsLayout);
+    
     auto* splitter = new QSplitter(Qt::Vertical);
     
     auto* waveformBox = new QGroupBox("Time Domain");
@@ -200,5 +223,39 @@ void CSynthVisualizationWindow::setEffects(double distortion, double filter, dou
         m_audioGenerator->setDistortion(distortion);
         m_audioGenerator->setFilter(filter);
         m_audioGenerator->setReverbMix(reverb);
+    }
+}
+
+void CSynthVisualizationWindow::toggleRecording() 
+{
+    if (!m_audioGenerator) 
+    {
+        return;
+    }
+    
+    if (m_audioGenerator->isRecording()) 
+    {
+        m_audioGenerator->stopRecording();
+        m_recordButton->setText("Record");
+        m_recordButton->setChecked(false);
+        
+        QString savedPath = m_audioGenerator->getLastRecordingPath();
+        m_recordingStatusLabel->setText(QString("Saved: %1").arg(savedPath));
+        
+    } 
+    
+    else 
+    {
+        if (m_audioGenerator->startRecording()) 
+        {
+            m_recordButton->setChecked(true);
+            m_recordButton->setText("Stop Recording");
+            m_recordingStatusLabel->setText("Recording");
+        } 
+        else 
+        {
+            m_recordButton->setChecked(false);
+            m_recordingStatusLabel->setText("Failed to start recording");
+        }
     }
 }

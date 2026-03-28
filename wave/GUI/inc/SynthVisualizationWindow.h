@@ -7,6 +7,7 @@
 #include <QTabWidget>
 #include <QGroupBox>
 #include <QLabel>
+#include <QPushButton>
 #include <QScrollArea>
 #include <QStatusBar>
 #include <QTimer>
@@ -40,6 +41,9 @@ private:
     CSpectrumAnalyzer* m_spectrumAnalyzer = nullptr;
     CHarmonicControlPanel* m_harmonicPanel {nullptr};
     
+    QPushButton* m_recordButton {nullptr};
+    QLabel* m_recordingStatusLabel {nullptr};
+    
 
 public slots:
     void setFundamental(double frequency);
@@ -47,6 +51,7 @@ public slots:
     void setEffects(double distortion, double filter, double reverb);
 
 private slots:
+    void toggleRecording();
     void updateVisualizations();
 };
 

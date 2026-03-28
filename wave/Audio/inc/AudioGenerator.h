@@ -8,6 +8,7 @@
 #include <memory>
 #include "Buffer.h"
 #include "Constants.h"
+#include "AudioRecorder.h"
 
 class CAudioGenerator : public QIODevice 
 {
@@ -39,6 +40,11 @@ public:
     
     CBuffer* getMixedBuffer();
     CBuffer* getHarmonicBuffer(int index);
+    
+    bool startRecording(const QString& filename = QString());
+    void stopRecording();
+    bool isRecording() const;
+    QString getLastRecordingPath() const;
 
 protected:
     qint64 readData(char* data, qint64 maxlen) override;
@@ -67,5 +73,7 @@ private:
 
     std::array<double, AudioConstants::BUFFER_SIZE> m_mixedSamples{};
     std::array<std::array<double, AudioConstants::BUFFER_SIZE>, AudioConstants::NUM_HARMONICS> m_harmonicSamples{};
+    
+    CAudioRecorder m_recorder;
 };
 
