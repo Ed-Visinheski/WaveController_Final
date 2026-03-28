@@ -12,7 +12,10 @@
 #include "Constants.h"
 #include "Timer.h"
 
-
+/**
+ * CSpectrumAnalyzer: Frequency spectrum analyzer with FFT visualization
+ * Displays magnitude spectrum with logarithmic scaling, peak detection, and harmonic markers
+ */
 class CSpectrumAnalyzer : public QWidget 
 {
     Q_OBJECT
@@ -20,17 +23,28 @@ class CSpectrumAnalyzer : public QWidget
 public:
     explicit CSpectrumAnalyzer(double sampleRate = AudioConstants::SAMPLE_RATE, QWidget* parent = nullptr);
 
+    // Update spectrum from the vector of audio samples
     void updateFromSamples(const std::vector<double>& samples);
 
+    // Update spectrum from the buffer
     void updateFromRingBuffer(CBuffer& ringBuffer);
     
+    // Enable or disable logarithmic frequency scale
     void setLogScale(bool log);
+
+    // Enable or disable peak frequency markers
     void setShowPeaks(bool show);
 
+    // Set smoothing factor for spectrum display from 0.0 to 1.0
     void setSmoothingFactor(double factor);
+    
+    // Set the decibel range for the display
     void setDbRange(double minDb, double maxDb);
     
+    // Set the frequency range to display in Hz
     void setFrequencyRange(double minFreq, double maxFreq);
+
+    // Set harmonic markers for the fundamental frequency
     void setHarmonicMarkers(double fundamental, int numHarmonics = AudioConstants::MAX_HARMONICS);
 
 protected:

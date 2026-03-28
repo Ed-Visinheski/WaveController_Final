@@ -19,6 +19,10 @@
 #include "SpectrumAnalyzer.h"
 #include "Timer.h"
 
+/**
+ * CSynthVisualizationWindow: Main application window integratingthe  waveform, spectrum, and harmonic controls
+ * Manages audio generation, visualization updates, and UI components
+ */
 class CSynthVisualizationWindow : public QMainWindow 
 {
     Q_OBJECT
@@ -46,12 +50,22 @@ private:
     
 
 public slots:
+
+    // Set the fundamental frequency for all harmonics
     void setFundamental(double frequency);
+
+    // Set the master output amplitude
     void setMasterAmplitude(double amplitude);
+
+    // Set audio effects parameters
     void setEffects(double distortion, double filter, double reverb);
 
 private slots:
+
+    // Toggle audio recording on or off
     void toggleRecording();
+
+    // Update all visualization widgets
     void updateVisualizations();
 };
 

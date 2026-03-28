@@ -10,6 +10,10 @@
 #include "Constants.h"
 #include "AudioRecorder.h"
 
+/**
+ * CAudioGenerator: Audio generator with multiple harmonic generations
+ * Generates audio streams with configurable harmonics, effects, and recording capability
+ */
 class CAudioGenerator : public QIODevice 
 {
     Q_OBJECT
@@ -24,26 +28,50 @@ public:
 
     explicit CAudioGenerator(QObject* parent = nullptr);
     
+    // Start audio generation
     void start();
     qint64 bytesAvailable() const override;
     
+    // Set the fundamental frequency in Hz
     void setFundamental(double frequency);
+
+    // Set the overall output volume from 0.0 to 1.0
     void setMasterAmplitude(double amplitude);
 
+    // Set individual harmonic amplitude from 0.0 to 1.0
     void setHarmonicAmplitude(int harmonicIndex, double amplitude);
+
+    // Set individual harmonic phase offset in radians
     void setHarmonicPhase(int harmonicIndex, double phase);
+
+    // Enable or disable a specific harmonic
     void setHarmonicEnabled(int harmonicIndex, bool enabled);
 
+    // Set distortion amount from 0.0 to 1.0
     void setDistortion(double distortion);
+
+    // Set low pass filter cutoff from 0.0 to 1.0
     void setFilter(double filter);
+
+    // Set reverb mix amount from 0.0 to 1.0
     void setReverbMix(double reverb);
     
+    // Get the mixed audio buffer for all harmonics
     CBuffer* getMixedBuffer();
+
+    // Get the buffer for a specific harmonic
     CBuffer* getHarmonicBuffer(int index);
     
-    bool startRecording(const QString& filename = QString());
+    // Start recording audio to a WAV file with auto generated filename
+    bool startRecording();
+
+    // Stop the current recording
     void stopRecording();
+
+    // Check if it is already currently recording
     bool isRecording() const;
+    
+    // Get the path of the last recorded file
     QString getLastRecordingPath() const;
 
 protected:

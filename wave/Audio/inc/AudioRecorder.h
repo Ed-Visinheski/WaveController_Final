@@ -8,18 +8,29 @@
 #include <cstdint>
 #include "Constants.h"
 
+/**
+ * CAudioRecorder: Records audio samples to WAV file format
+ * Handles the WAV file creation, header WAV format writing, and timestamped file naming
+ */
 class CAudioRecorder 
 {
 public:
     CAudioRecorder();
     ~CAudioRecorder();
 
-    bool startRecording(const QString& filename);
+    // Start recording to a WAV file with auto generated filename
+    bool startRecording();
+
+    // Stop recording and update the WAV file
     void stopRecording();
+
+    // Check if currently recording
     bool isRecording() const { return m_isRecording; }
     
+    // Write audio samples to the recording file
     void writeAudioData(const int16_t* data, int numSamples);
     
+    // Get the path of the current recording
     QString getLastRecordingPath() const { return m_currentFilePath; }
 
 private:

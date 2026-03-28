@@ -14,7 +14,7 @@ CAudioRecorder::~CAudioRecorder()
     }
 }
 
-bool CAudioRecorder::startRecording(const QString& filename) 
+bool CAudioRecorder::startRecording() 
 {
     if (m_isRecording) 
     {
@@ -27,19 +27,10 @@ bool CAudioRecorder::startRecording(const QString& filename)
         recordingsDir.mkpath(".");
     }
 
-    QString finalFilename = filename;
-    if (finalFilename.isEmpty()) 
-    {
-        QString timestamp = QDateTime::currentDateTime().toString("yyyy_MM_dd_HH_mm_ss");
-        finalFilename = QString("recording_%1.wav").arg(timestamp);
-    }
-    
-    if (!finalFilename.endsWith(".wav", Qt::CaseInsensitive)) 
-    {
-        finalFilename += ".wav";
-    }
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy_MM_dd_HH_mm_ss");
+    QString filename = QString("recording_%1.wav").arg(timestamp);
 
-    m_currentFilePath = recordingsDir.filePath(finalFilename);
+    m_currentFilePath = recordingsDir.filePath(filename);
     m_file.setFileName(m_currentFilePath);
 
     if (!m_file.open(QIODevice::WriteOnly)) 

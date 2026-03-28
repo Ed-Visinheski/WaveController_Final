@@ -160,9 +160,9 @@
         return total;
     }
     
-    bool CAudioGenerator::startRecording(const QString& filename) 
+    bool CAudioGenerator::startRecording() 
     {
-        return m_recorder.startRecording(filename);
+        return m_recorder.startRecording();
     }
     
     void CAudioGenerator::stopRecording() 

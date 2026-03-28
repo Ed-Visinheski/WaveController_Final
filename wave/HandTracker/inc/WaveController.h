@@ -9,6 +9,10 @@ class QAudioSink;
 class CAudioGenerator;
 class CSynthVisualizationWindow;
 
+/**
+ * CWaveController: Main controller integrating hand tracking input with the audio generation
+ * Receives UDP hand tracking data and maps gestures to audio parameters
+ */
 class CWaveController : public QObject 
 {
     Q_OBJECT
