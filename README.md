@@ -27,6 +27,7 @@ A hand-gesture controlled harmonic synthesizer for accessible music creation and
 ### macOS
 
 **Requirements:** 
+- **macOS 26.2 (Tahoe) or later** - Required for Xcode 15.0
 - [Homebrew](https://brew.sh/) must be installed
 - **Xcode 15.0 or higher** - A full installation of Xcode.app from the App Store is required
   - **Important:** Installing only the Command Line Tools is **not sufficient**
@@ -90,6 +91,9 @@ If using VSCode, simply press **F5** to build and run the project automatically.
    ```
 
 ### Windows
+
+**Requirements:**
+- **Windows 11**
 
 1. Install dependencies:
    - Download and install [CMake](https://cmake.org/download/)
