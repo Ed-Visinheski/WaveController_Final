@@ -17,6 +17,7 @@
 #include "AudioGenerator.h"
 #include "Constants.h"
 #include "SpectrumAnalyzer.h"
+#include "Timer.h"
 
 class CSynthVisualizationWindow : public QMainWindow 
 {
@@ -34,7 +35,6 @@ private:
 
     int m_numHarmonics;
     int m_activeHarmonicCount;
-    QTimer* m_updateTimer {nullptr};
 
     CAudioGenerator* m_audioGenerator;    
     CWaveform* m_waveformView {nullptr};

@@ -33,7 +33,6 @@ void CWaveformDisplay::paintEvent(QPaintEvent* event)
 // CWaveform implementation
 CWaveform::CWaveform(QWidget* parent)
         : QWidget(parent)
-        , m_updateTimer(new QTimer(this))
         , m_autoScale(true)
         , m_yScale(1.0)
         , m_triggerLevel(0.0)
@@ -46,13 +45,12 @@ CWaveform::CWaveform(QWidget* parent)
 
     setupUI();
 
-    connect(m_updateTimer, &QTimer::timeout, this, [this]() 
+    connect(&CTimer::instance(), &CTimer::timeout, this, [this]() 
     {
         if (m_waveformWidget) {
             m_waveformWidget->update();
         }
     });
-    m_updateTimer->start(1000 / UPDATE_FPS);
 
     addChannel("Mixed", QColor(0, 255, 128));
 }
@@ -124,7 +122,7 @@ void CWaveform::updateChannel(size_t channelIndex, const std::vector<double>& sa
 {
     if (channelIndex >= m_channels.size()) return;
     
-    const size_t count = std::min(samples.size(), DISPLAY_SAMPLES);
+    const size_t count = std::min(samples.size(), AudioConstants::DISPLAY_SAMPLES);
     std::copy(samples.begin(), samples.begin() + count, m_channels[channelIndex]->backBuffer.begin());
     
     m_channels[channelIndex]->swapRequested.store(true, std::memory_order_release);
@@ -144,14 +142,14 @@ void CWaveform::updateChannelFromBuffer(size_t channelIndex, CBuffer& buffer)
         return;
     }
 
-    while (availableRead > DISPLAY_SAMPLES) 
+    while (availableRead > AudioConstants::DISPLAY_SAMPLES) 
     {
-        const size_t drop = std::min(availableRead - DISPLAY_SAMPLES, m_discardBuffer.size());
+        const size_t drop = std::min(availableRead - AudioConstants::DISPLAY_SAMPLES, m_discardBuffer.size());
         buffer.read(m_discardBuffer.data(), drop);
         availableRead -= drop;
     }
 
-    buffer.read(m_channels[channelIndex]->backBuffer.data(), std::min(availableRead, DISPLAY_SAMPLES));
+    buffer.read(m_channels[channelIndex]->backBuffer.data(), std::min(availableRead, AudioConstants::DISPLAY_SAMPLES));
     m_channels[channelIndex]->swapRequested.store(true, std::memory_order_release);
 }
 
@@ -330,10 +328,9 @@ void CWaveform::drawWaveform(QPainter& painter, const WaveformChannel& channel, 
             maxVal = 1.0;
         }
     }
-
     painter.setPen(QPen(channel.color, 2.0));
 
-    const size_t count = std::min(channel.frontBuffer.size(), DISPLAY_SAMPLES);
+    const size_t count = std::min(channel.frontBuffer.size(), AudioConstants::DISPLAY_SAMPLES);
     for (size_t i = 1; i < count; ++i) 
     {
         const size_t index1 = (startIndex + i - 1) % count;

@@ -12,6 +12,7 @@
 #include <memory>
 #include <atomic>
 #include "Buffer.h"
+#include "Timer.h"
 
 class CWaveform;
 
@@ -41,9 +42,6 @@ public:
         Combined
     };
 
-    static constexpr size_t DISPLAY_SAMPLES = 2048;
-    static constexpr int UPDATE_FPS = 60;
-
     struct WaveformChannel 
     {
         QColor color;
@@ -60,8 +58,8 @@ public:
                         : name(n)
                         , color(c)
                         , swapRequested(false)
-                        , frontBuffer(DISPLAY_SAMPLES, 0.0)
-                        , backBuffer(DISPLAY_SAMPLES, 0.0) {}
+                        , frontBuffer(AudioConstants::DISPLAY_SAMPLES, 0.0)
+                        , backBuffer(AudioConstants::DISPLAY_SAMPLES, 0.0) {}
     };
     
     friend class CWaveformDisplay;
@@ -101,9 +99,8 @@ private:
     double m_yScale;
     double m_triggerLevel;
     
-    DisplayMode m_displayMode;
-    QTimer* m_updateTimer;
     QTabBar* m_tabBar;
+    DisplayMode m_displayMode;
     CWaveformDisplay* m_waveformWidget;
     
     std::vector<std::unique_ptr<WaveformChannel>> m_channels;

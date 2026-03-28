@@ -10,6 +10,7 @@
 #include "KissFFTAnalyzer.h"
 #include "Buffer.h"
 #include "Constants.h"
+#include "Timer.h"
 
 
 class CSpectrumAnalyzer : public QWidget 
@@ -17,9 +18,6 @@ class CSpectrumAnalyzer : public QWidget
     Q_OBJECT
 
 public:
-    static constexpr size_t FFT_SIZE = 2048;
-    static constexpr int UPDATE_FPS = 30;
-
     explicit CSpectrumAnalyzer(double sampleRate = AudioConstants::SAMPLE_RATE, QWidget* parent = nullptr);
 
     void updateFromSamples(const std::vector<double>& samples);
@@ -70,7 +68,6 @@ private:
     double m_hoverFrequency;
     double m_smoothingFactor;
     
-    QTimer* m_updateTimer;
     std::unique_ptr<CKissFFTAnalyzer> m_fft;
 
     std::vector<double> m_displayBuffer;

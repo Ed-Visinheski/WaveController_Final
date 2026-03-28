@@ -116,9 +116,8 @@ void CSynthVisualizationWindow::connectSignals()
 void CSynthVisualizationWindow::startVisualization() 
 {
 
-    m_updateTimer = new QTimer(this);
-    connect(m_updateTimer, &QTimer::timeout, this, &CSynthVisualizationWindow::updateVisualizations);
-    m_updateTimer->start(16);
+    connect(&CTimer::instance(), &CTimer::timeout, this, &CSynthVisualizationWindow::updateVisualizations);
+    CTimer::instance().start();
 }
 
 void CSynthVisualizationWindow::updateAudioParameters() 
@@ -243,7 +242,7 @@ void CSynthVisualizationWindow::toggleRecording()
         m_recordingStatusLabel->setText(QString("Saved: %1").arg(savedPath));
         
     } 
-    
+
     else 
     {
         if (m_audioGenerator->startRecording()) 

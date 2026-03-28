@@ -3,9 +3,8 @@
 CSpectrumAnalyzer::CSpectrumAnalyzer(double sampleRate, QWidget* parent)
     : QWidget(parent)
     , m_sampleRate(sampleRate)
-    , m_fft(std::make_unique<CKissFFTAnalyzer>(FFT_SIZE))
-    , m_updateTimer(new QTimer(this))
-    , m_displayBuffer(FFT_SIZE, 0.0)
+    , m_fft(std::make_unique<CKissFFTAnalyzer>(AudioConstants::FFT_SIZE))
+    , m_displayBuffer(AudioConstants::FFT_SIZE, 0.0)
     , m_smoothingFactor(0.7)
     , m_minFreq(20.0)
     , m_maxFreq(sampleRate / 2.0)
@@ -20,13 +19,12 @@ CSpectrumAnalyzer::CSpectrumAnalyzer(double sampleRate, QWidget* parent)
     setAutoFillBackground(true);
     setMouseTracking(true);
 
-    connect(m_updateTimer, &QTimer::timeout, this, &CSpectrumAnalyzer::updateSpectrum);
-    m_updateTimer->start(1000 / UPDATE_FPS);
+    connect(&CTimer::instance(), &CTimer::timeout, this, &CSpectrumAnalyzer::updateSpectrum);
 }
 
 void CSpectrumAnalyzer::updateFromSamples(const std::vector<double>& samples) 
 {
-    if (samples.size() < FFT_SIZE) 
+    if (samples.size() < AudioConstants::FFT_SIZE) 
     {
         return;
     }
@@ -42,10 +40,10 @@ void CSpectrumAnalyzer::updateFromSamples(const std::vector<double>& samples)
 
 void CSpectrumAnalyzer::updateFromRingBuffer(CBuffer& ringBuffer) 
 {
-    std::vector<double> samples(FFT_SIZE);
-    const size_t read = ringBuffer.peek(samples.data(), FFT_SIZE);
-    
-    if (read == FFT_SIZE) 
+    std::vector<double> samples(AudioConstants::FFT_SIZE);
+    const size_t read = ringBuffer.peek(samples.data(), AudioConstants::FFT_SIZE);
+
+    if (read == AudioConstants::FFT_SIZE)
     {
         updateFromSamples(samples);
         // update();
@@ -176,7 +174,7 @@ void CSpectrumAnalyzer::drawSpectrum(QPainter& painter, int w, int h)
     
     for (size_t bin = 1; bin < numBins; ++bin) 
     {
-        const double freq = CKissFFTAnalyzer::binToFrequency(bin, FFT_SIZE, m_sampleRate);
+        const double freq = CKissFFTAnalyzer::binToFrequency(bin, AudioConstants::FFT_SIZE, m_sampleRate);
         if (freq < m_minFreq || freq > m_maxFreq) 
         {
             continue;
@@ -203,7 +201,7 @@ void CSpectrumAnalyzer::drawPeaks(QPainter& painter, int w, int h)
     
     for (const auto& [bin, magnitude] : peaks) 
     {
-        const double freq = CKissFFTAnalyzer::binToFrequency(bin, FFT_SIZE, m_sampleRate);
+        const double freq = CKissFFTAnalyzer::binToFrequency(bin, AudioConstants::FFT_SIZE, m_sampleRate);
         if (freq < m_minFreq || freq > m_maxFreq) 
         {
             continue;
