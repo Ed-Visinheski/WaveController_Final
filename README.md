@@ -1,19 +1,21 @@
 # Wave - Hand-Tracked Harmonics Synthesizer
 
-A hand-gesture controlled harmonic synthesizer for accessible music creation and education.
+A hand-gesture controlled harmonic synthesizer for accessible music creation and education. 
+Harmonic Waves can be manually edited using the Harmonic Control Panel or simply by Waving your Hands - (requires a webcam)! 
+Wave teaches users how combining Harmoic Waves creates a new mixed Waveform! 
 
 ## Features
 
 ### Display Modes
-- **Solo**: Shows only the mixed output waveform (all harmonics combined)
-- **Separate**: Displays each harmonic in its own vertical lane for individual analysis
-- **Combined**: Overlaps all harmonic channels in the same view for comparison. Note: Can become visually unclear with many harmonics - recommended maximum of 5 harmonics for best clarity.
+- **Solo**: Shows only the mixed output waveform (all of the harmonics combined)
+- **Separate**: Displays each harmonic separately in its own vertical lane
+- **Combined**: Overlaps harmonic channels in the same view for comparison. Note: This can become visually unclear with many harmonics - recommended maximum of 5 harmonics.
 
 ### Waveform Presets
-- **Sine**: Pure sine wave
+- **Sine**: 1 Single Sine wave
 - **Square**: Mixed harmonics create a square shaped waveform
-- **Triangle**: Harmonics combine to form a triangular waveform
-- **Sawtooth**: Creates a sawtooth pattern from harmonic synthesis
+- **Triangle**: Mixed harmonics create a a triangular waveform
+- **Sawtooth**: Mixed harmonics create a sawtooth pattern waverform
 
 ## Prerequisites
 
@@ -213,7 +215,7 @@ WaveController_Final/
 ## Usage
 Start the hand tracking camera (optional):
    ```bash
-   source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+   source .venv/bin/activate  # or .venv\Scripts\activate.ps1 / .venv\Scripts\activate.bat on Windows
    python main.py
    ```
    
@@ -221,7 +223,7 @@ Start the hand tracking camera (optional):
 
 2. Launch the application:
    - Press **F5** in VSCode, or
-   - Run `./build/bin/WaveControllerFinal` (macOS/Linux) `build\bin\Release\WaveControllerFinal.exe` (Windows)
+   - Run `./build/bin/WaveControllerFinal` (macOS/Linux) `.\build\bin\Release\WaveControllerFinal.exe` (Windows)
 
 3. Use the harmonic Control Panel to modify the number of Harmonics or their settings - either manually or with the preset profiles (Sine, Sawtooth, Square or Triangle)
 4. Switch between the different display modes Solo, Separate, Combined
