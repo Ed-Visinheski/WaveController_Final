@@ -39,7 +39,7 @@ void CSynthVisualizationWindow::setupUI()
     connect(m_recordButton, &QPushButton::clicked, this, &CSynthVisualizationWindow::toggleRecording);
     
     m_recordingStatusLabel = new QLabel("");
-    m_recordingStatusLabel->setStyleSheet("font-size: 12px; color: #666;");
+    m_recordingStatusLabel->setStyleSheet("font-size: 12px;");
     
     recordingControlsLayout->addWidget(m_recordButton);
     recordingControlsLayout->addWidget(m_recordingStatusLabel);

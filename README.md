@@ -18,8 +18,8 @@ A hand-gesture controlled harmonic synthesizer for accessible music creation and
 ## Prerequisites
 
 - **CMake** (version 3.20 or higher)
-- **Qt** (Qt5 or Qt6)
-- **Python 3** (for hand tracking)
+- **Qt** (Qt6)
+- **Python 3.14.3** (for hand tracking)
 - **C++ Compiler** (supporting C++20)
 
 ## Build Instructions
@@ -56,7 +56,8 @@ A hand-gesture controlled harmonic synthesizer for accessible music creation and
 
 4. Run:
    ```bash
-   ./bin/WaveControllerFinal
+   cd ..
+   ./build/bin/WaveControllerFinal
    ```
 
 ### VSCode (Recommended)
@@ -87,27 +88,31 @@ If using VSCode, simply press **F5** to build and run the project automatically.
 
 4. Run:
    ```bash
-   ./bin/WaveControllerFinal
+   cd ..
+   ./build/bin/WaveControllerFinal
    ```
 
 ### Windows
 
 **Requirements:**
-- **Windows 11**
+- **Windows 10 or later**
 
 1. Install dependencies:
+   - **Note:** Terminal is recommended over the Command Prompt. Install it from the Microsoft store
    - Download and install [CMake](https://cmake.org/download/)
    - Download and install [Qt](https://www.qt.io/download-qt-installer)
+     - **Warning:** When installing Qt, select the "Desktop Qt" components for your compiler (e.g., MSVC 2022 64-bit). If you installed Qt with MinGW but are using MSVC, use the Qt Maintenance Tool to add the MSVC build. MinGW installations do not need changes if using MinGW.
    - Install [Python 3](https://www.python.org/downloads/)
+   - **Note:** A restart may be required to ensure all PATH variables are updated
 
-2. Set up Python environment (Command Prompt):
+2. Set up Python environment (Terminal):
    ```cmd
    python -m venv .venv
-   .venv\Scripts\activate
+   .venv\Scripts\activate.ps1 #(or .venv\Scripts\activate.bat if using Command Prompt)
    pip install -r requirements.txt
    ```
 
-3. Build the project (Command Prompt):
+3. Build the project (Terminal):
    ```cmd
    mkdir build
    cd build
@@ -115,9 +120,12 @@ If using VSCode, simply press **F5** to build and run the project automatically.
    cmake --build . --config Release --parallel
    ```
 
+   **Note:** After building, run `windeployqt bin\Release\WaveControllerFinal.exe` from the build directory to copy required Qt libraries for the executable to run. `windeployqt` is located in your Qt installation's `bin` directory (e.g. `C:\Qt\6.11.0\msvc2022_64\bin\windeployqt.exe`). Use the full path if it's not in your system's PATH, like: `& "C:\Qt\6.11.0\msvc2022_64\bin\windeployqt.exe" bin\Release\WaveControllerFinal.exe`
+
 4. Run:
    ```cmd
-   bin\Release\WaveControllerFinal.exe
+   cd ..
+   .\build\bin\Release\WaveControllerFinal.exe
    ```
 
 ## Project Structure
@@ -217,5 +225,5 @@ Start the hand tracking camera (optional):
 
 3. Use the harmonic Control Panel to modify the number of Harmonics or their settings - either manually or with the preset profiles (Sine, Sawtooth, Square or Triangle)
 4. Switch between the different display modes Solo, Separate, Combined
-5. Click Record to record audio to the `recordings/` folder
+5. Click Record to record audio to the `recordings/` folder (This will be in `build\recordings\` if running from the build directory)
 6. Wave one hand in front of the camera to start synthesizing music. Pinch your index finger and thumb together to add an effect 

@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include "KissFFTAnalyzer.h"
 
 CKissFFTAnalyzer::CKissFFTAnalyzer(size_t fftSize)

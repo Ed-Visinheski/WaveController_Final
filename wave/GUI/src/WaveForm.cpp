@@ -67,25 +67,6 @@ void CWaveform::setupUI()
     m_tabBar->addTab("Combined");
     m_tabBar->setCurrentIndex(1);
     m_tabBar->setExpanding(false);
-    
-    m_tabBar->setStyleSheet
-    (
-        "QTabBar { background: transparent; }"
-        "QTabBar::tab { "
-        "  background: #2a2a2a; "
-        "  color: #cccccc; "
-        "  padding: 4px 12px; "
-        "  border: 1px solid #404040; "
-        "  border-bottom: none; "
-        "}"
-        "QTabBar::tab:selected { "
-        "  background: #3a3a3a; "
-        "  color: white; "
-        "}"
-        "QTabBar::tab:hover { "
-        "  background: #353535; "
-        "}"
-    );
 
     connect(m_tabBar, &QTabBar::currentChanged, this, [this](int index) 
     {
