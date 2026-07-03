@@ -1,4 +1,5 @@
 #include "SpectrumAnalyzer.h"
+#include "Constants.h"
 
 CSpectrumAnalyzer::CSpectrumAnalyzer(double sampleRate, QWidget* parent)
     : QWidget(parent)
@@ -22,7 +23,7 @@ CSpectrumAnalyzer::CSpectrumAnalyzer(double sampleRate, QWidget* parent)
     connect(&CTimer::instance(), &CTimer::timeout, this, &CSpectrumAnalyzer::updateSpectrum);
 }
 
-void CSpectrumAnalyzer::updateFromSamples(const std::vector<double>& samples) 
+void CSpectrumAnalyzer::updateFromSamples(const std::array<double, AudioConstants::FFT_SIZE>& samples) 
 {
     if (samples.size() < AudioConstants::FFT_SIZE) 
     {
@@ -38,10 +39,10 @@ void CSpectrumAnalyzer::updateFromSamples(const std::vector<double>& samples)
     }
 }
 
-void CSpectrumAnalyzer::updateFromRingBuffer(CBuffer& ringBuffer) 
+void CSpectrumAnalyzer::updateFromRingBuffer(CBuffer<double>& ringBuffer) 
 {
-    std::vector<double> samples(AudioConstants::FFT_SIZE);
-    const size_t read = ringBuffer.peek(samples.data(), AudioConstants::FFT_SIZE);
+    std::array<double,AudioConstants::FFT_SIZE>  samples{};
+    const size_t read = ringBuffer.peek(samples.begin(), AudioConstants::FFT_SIZE);
 
     if (read == AudioConstants::FFT_SIZE)
     {

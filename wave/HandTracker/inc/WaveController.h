@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <vector>
+#include "AudioConsumer.h"
 #include "Constants.h"
 
 class QUdpSocket;
@@ -22,10 +23,12 @@ public:
 
 private:
     QUdpSocket* m_udpSocket;
-    CAudioGenerator* m_audioGenerator;
     QAudioSink *m_audioSink;
-    CSynthVisualizationWindow *m_visualizer;
 
+    CAudioConsumer* m_audioConsumer;
+    CAudioGenerator* m_audioGenerator;
+    
+    CSynthVisualizationWindow *m_visualizer;
     const std::vector<double> PENTATONIC_RATIOS = {1.0, 9.0/8.0, 5.0/4.0, 3.0/2.0, 5.0/3.0, 2.0};
 
 private slots:

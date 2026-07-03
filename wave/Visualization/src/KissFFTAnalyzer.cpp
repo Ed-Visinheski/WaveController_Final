@@ -1,3 +1,4 @@
+#include "Constants.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include "KissFFTAnalyzer.h"
@@ -22,7 +23,7 @@ CKissFFTAnalyzer::~CKissFFTAnalyzer()
     kiss_fft_free(m_cfg);
 };
 
-const std::vector<double>& CKissFFTAnalyzer::computeMagnitudeSpectrum(const std::vector<double>& samples) 
+const std::vector<double>& CKissFFTAnalyzer::computeMagnitudeSpectrum(const std::array<double, AudioConstants::FFT_SIZE>& samples) 
 {
     const size_t N = std::min(samples.size(), m_fftSize);
     

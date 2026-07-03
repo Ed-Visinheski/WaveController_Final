@@ -35,8 +35,6 @@ CWaveform::CWaveform(QWidget* parent)
         : QWidget(parent)
         , m_autoScale(true)
         , m_yScale(1.0)
-        , m_triggerLevel(0.0)
-        , m_triggerEnabled(false)
         , m_displayMode(DisplayMode::Separate)
         , m_tabBar(nullptr)
         , m_waveformWidget(nullptr)
@@ -44,14 +42,6 @@ CWaveform::CWaveform(QWidget* parent)
     m_channels.reserve(AudioConstants::MAX_HARMONICS); 
 
     setupUI();
-
-    connect(&CTimer::instance(), &CTimer::timeout, this, [this]() 
-    {
-        if (m_waveformWidget) {
-            m_waveformWidget->update();
-        }
-    });
-
     addChannel("Mixed", QColor(0, 255, 128));
 }
 
@@ -104,12 +94,11 @@ void CWaveform::updateChannel(size_t channelIndex, const std::vector<double>& sa
     if (channelIndex >= m_channels.size()) return;
     
     const size_t count = std::min(samples.size(), AudioConstants::DISPLAY_SAMPLES);
-    std::copy(samples.begin(), samples.begin() + count, m_channels[channelIndex]->backBuffer.begin());
+    std::copy(samples.begin(), samples.begin() + count, m_channels[channelIndex]->buffer.begin());
     
-    m_channels[channelIndex]->swapRequested.store(true, std::memory_order_release);
 }
 
-void CWaveform::updateChannelFromBuffer(size_t channelIndex, CBuffer& buffer) 
+void CWaveform::updateChannelFromBuffer(size_t channelIndex, CBuffer<double>& buffer) 
 {
     if (channelIndex >= m_channels.size()) 
     {
@@ -123,15 +112,16 @@ void CWaveform::updateChannelFromBuffer(size_t channelIndex, CBuffer& buffer)
         return;
     }
 
-    while (availableRead > AudioConstants::DISPLAY_SAMPLES) 
-    {
-        const size_t drop = std::min(availableRead - AudioConstants::DISPLAY_SAMPLES, m_discardBuffer.size());
-        buffer.read(m_discardBuffer.data(), drop);
-        availableRead -= drop;
-    }
-
-    buffer.read(m_channels[channelIndex]->backBuffer.data(), std::min(availableRead, AudioConstants::DISPLAY_SAMPLES));
-    m_channels[channelIndex]->swapRequested.store(true, std::memory_order_release);
+    // Capture ALL available samples from ring buffer
+    // This gives us the complete dataset to scroll through
+    auto& channel = m_channels[channelIndex];
+    
+    // Read all available samples into internal buffer
+    size_t samplesToRead = std::min(availableRead, AudioConstants::BUFFER_SIZE);
+    buffer.read(channel->buffer.data(), samplesToRead);
+    
+    // Reset display window position to start of new data
+    m_displayWindowPos = 0;
 }
 
 void CWaveform::setChannelVisible(size_t index, bool visible) 
@@ -145,6 +135,11 @@ void CWaveform::setChannelVisible(size_t index, bool visible)
 void CWaveform::resizeEvent(QResizeEvent* event) 
 {
     QWidget::resizeEvent(event);
+    refresh();
+}
+
+void CWaveform::refresh()
+{
     if (m_waveformWidget) 
     {
         m_waveformWidget->update();
@@ -153,22 +148,14 @@ void CWaveform::resizeEvent(QResizeEvent* event)
 
 void CWaveform::performPaint(QPainter& painter, int w, int h) 
 {
-    for (auto& channel : m_channels) 
-    {
-        if (channel->swapRequested.load(std::memory_order_acquire)) 
-        {
-            std::swap(channel->frontBuffer, channel->backBuffer);
-            channel->swapRequested.store(false, std::memory_order_release);
-        }
-    }
 
     drawGrid(painter, w, h);
 
-    size_t startIndex = 0;
-    if (m_triggerEnabled && !m_channels.empty()) 
-    {
-        startIndex = findTriggerPoint(m_channels[0]->frontBuffer);
-    }
+    // Advance display window for smooth scrolling
+    // Each frame advances by SAMPLES_PER_FRAME to scroll through captured buffer
+    m_displayWindowPos = (m_displayWindowPos + AudioConstants::SAMPLES_PER_FRAME) % AudioConstants::BUFFER_SIZE;
+
+    size_t startIndex = m_displayWindowPos;
 
     if (m_displayMode == DisplayMode::Solo) 
     {
@@ -287,7 +274,7 @@ void CWaveform::drawGridSeparate(QPainter& painter, int w, int h)
 
 void CWaveform::drawWaveform(QPainter& painter, const WaveformChannel& channel, int w, int h, size_t startIndex, size_t channelIndex, size_t numVisibleChannels) 
 {
-    if (channel.frontBuffer.empty() || numVisibleChannels == 0) 
+    if (channel.buffer.empty() || numVisibleChannels == 0) 
     {
         return;
     }
@@ -300,9 +287,10 @@ void CWaveform::drawWaveform(QPainter& painter, const WaveformChannel& channel, 
     if (m_autoScale) 
     {
         maxVal = 0.0;
-        for (double sample : channel.frontBuffer)
+        for (size_t i = 0; i < AudioConstants::DISPLAY_SAMPLES; ++i)
         {
-            maxVal = std::max(maxVal, std::abs(sample));
+            size_t idx = (startIndex + i) % AudioConstants::BUFFER_SIZE;
+            maxVal = std::max(maxVal, std::abs(channel.buffer[idx]));
         }
         if (maxVal < 0.0001) //DO NOT REMOVE !!! - needed to prevent division by 0 error
         {
@@ -311,32 +299,19 @@ void CWaveform::drawWaveform(QPainter& painter, const WaveformChannel& channel, 
     }
     painter.setPen(QPen(channel.color, 2.0));
 
-    const size_t count = std::min(channel.frontBuffer.size(), AudioConstants::DISPLAY_SAMPLES);
-    for (size_t i = 1; i < count; ++i) 
+    // Draw only DISPLAY_SAMPLES worth of the buffer (the visible window)
+    for (size_t i = 1; i < AudioConstants::DISPLAY_SAMPLES; ++i) 
     {
-        const size_t index1 = (startIndex + i - 1) % count;
-        const size_t index2 = (startIndex + i) % count;
+        const size_t index1 = (startIndex + i - 1) % AudioConstants::BUFFER_SIZE;
+        const size_t index2 = (startIndex + i) % AudioConstants::BUFFER_SIZE;
 
-        const double x1 = (i - 1) * w / static_cast<double>(count);
-        const double y1 = sectionCenter - (channel.frontBuffer[index1] / maxVal) * sectionAmplitude;
-
-        const double x2 = i * w / static_cast<double>(count);
-        const double y2 = sectionCenter - (channel.frontBuffer[index2] / maxVal) * sectionAmplitude;
+        const double x1 = (i - 1) * w / static_cast<double>(AudioConstants::DISPLAY_SAMPLES);
+        const double y1 = sectionCenter - (channel.buffer[index1] / maxVal) * sectionAmplitude;
+        const double x2 = i * w / static_cast<double>(AudioConstants::DISPLAY_SAMPLES);
+        const double y2 = sectionCenter - (channel.buffer[index2] / maxVal) * sectionAmplitude;
 
         painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
     }
-}
-
-size_t CWaveform::findTriggerPoint(const std::vector<double>& samples) const 
-{
-    for (size_t i = 1; i < samples.size() / 2; ++i) 
-    {
-        if (samples[i - 1] <= m_triggerLevel && samples[i] > m_triggerLevel) 
-        {
-            return i;
-        }
-    }
-    return 0;
 }
 
 void CWaveform::drawLabels(QPainter& painter, int h) 

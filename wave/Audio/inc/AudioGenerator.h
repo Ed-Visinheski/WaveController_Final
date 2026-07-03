@@ -1,20 +1,21 @@
 #pragma once
-
-#include <QIODevice>
+#include <QObject>
 #include <array>
 #include <vector>
 #include <atomic>
 #include <cmath>
 #include <memory>
+#include "AudioConsumer.h"
 #include "Buffer.h"
 #include "Constants.h"
 #include "AudioRecorder.h"
+#include "AudioConsumer.h"
 
 /**
  * CAudioGenerator: Audio generator with multiple harmonic generations
  * Generates audio streams with configurable harmonics, effects, and recording capability
  */
-class CAudioGenerator : public QIODevice 
+class CAudioGenerator : public QObject
 {
     Q_OBJECT
 
@@ -26,11 +27,9 @@ public:
         std::atomic<bool> enabled{true};
     };
 
-    explicit CAudioGenerator(QObject* parent = nullptr);
-    
-    // Start audio generation
-    void start();
-    qint64 bytesAvailable() const override;
+    explicit CAudioGenerator(CAudioConsumer& audioConsumer, QObject *parent = nullptr);
+
+    void connectSignals();
     
     // Set the fundamental frequency in Hz
     void setFundamental(double frequency);
@@ -56,27 +55,19 @@ public:
     // Set reverb mix amount from 0.0 to 1.0
     void setReverbMix(double reverb);
     
-    // Get the mixed audio buffer for all harmonics
-    CBuffer* getMixedBuffer();
-
-    // Get the buffer for a specific harmonic
-    CBuffer* getHarmonicBuffer(int index);
+    // Get the audio output buffer (int16_t for QAudioSink)
+    CBuffer<int16_t>* getAudioOutputBuffer();
     
-    // Start recording audio to a WAV file with auto generated filename
-    bool startRecording();
+    // Get the mixed buffer (double for visualization)
+    CBuffer<double>* getMixedBuffer();
 
-    // Stop the current recording
-    void stopRecording();
+    // Get the buffer for a specific harmonic (0-7)
+    CBuffer<double>* getHarmonicBuffer(int index);
 
-    // Check if it is already currently recording
-    bool isRecording() const;
+    // Get pointer to entire harmonic buffer array
+    std::array<CBuffer<double>, AudioConstants::NUM_HARMONICS>* getHarmonicBuffers();
     
-    // Get the path of the last recorded file
-    QString getLastRecordingPath() const;
-
-protected:
-    qint64 readData(char* data, qint64 maxlen) override;
-    qint64 writeData(const char* data, qint64 len) override;
+    void generateAudio();
 
 private:
     const int m_sampleRate{AudioConstants::SAMPLE_RATE};
@@ -94,14 +85,13 @@ private:
     size_t m_reverbIndex{0};
     std::vector<double> m_reverbBuffer;
     
-    CBuffer m_mixedBuffer;
+    CBuffer<int16_t> m_audioOutputBuffer;  // int16_t output for QAudioSink
+    CBuffer<double> m_mixedBuffer;          // double mixed signal for visualization
+    CAudioConsumer* m_audioConsumer;
 
-    std::array<CBuffer, AudioConstants::NUM_HARMONICS> m_harmonicBuffers;
+    std::array<CBuffer<double>, AudioConstants::NUM_HARMONICS> m_harmonicBuffers;  // Individual harmonics (0-7)
     std::array<SHarmonicControls, AudioConstants::NUM_HARMONICS> m_harmonics{};    
 
-    std::array<double, AudioConstants::BUFFER_SIZE> m_mixedSamples{};
-    std::array<std::array<double, AudioConstants::BUFFER_SIZE>, AudioConstants::NUM_HARMONICS> m_harmonicSamples{};
-    
-    CAudioRecorder m_recorder;
+
 };
 

@@ -5,10 +5,12 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include "AudioConsumer.h"
 #include "AudioGenerator.h"
 #include "SynthVisualizationWindow.h"
 #include "WaveController.h"
 #include "Constants.h"
+#include "thread"
 
 CWaveController::CWaveController(QObject *parent) : QObject(parent) 
 {
@@ -28,22 +30,28 @@ CWaveController::CWaveController(QObject *parent) : QObject(parent)
 
     QAudioDevice info = QMediaDevices::defaultAudioOutput();
     
-    m_audioGenerator = new CAudioGenerator(this);
-    m_audioSink = new QAudioSink(info, format, this);
-    m_audioSink->setBufferSize(AudioConstants::BUFFER_SIZE);
-    
-    m_audioGenerator->start();
-    m_audioSink->start(m_audioGenerator);
-        
-    m_visualizer = new CSynthVisualizationWindow(m_audioGenerator, AudioConstants::NUM_HARMONICS);
-    m_visualizer->show();
-    
+    m_audioConsumer = new CAudioConsumer(this);
+    m_audioGenerator = new CAudioGenerator(*m_audioConsumer, this);
+
     //Audio after visualizer as GUI takes a while to load!!
     m_audioGenerator->setFundamental(220.0);
     m_audioGenerator->setMasterAmplitude(0.5);
+    
+    m_audioGenerator->generateAudio();
 
+    m_audioSink = new QAudioSink(info, format, this);
+    m_audioSink->setBufferSize(AudioConstants::BUFFER_SIZE);
+            
+    m_visualizer = new CSynthVisualizationWindow(m_audioConsumer, m_audioGenerator, AudioConstants::NUM_HARMONICS);
+    
     m_visualizer->setFundamental(220.0);
     m_visualizer->setMasterAmplitude(0.5);
+
+    m_audioConsumer->start();   
+    m_audioSink->start(m_audioConsumer);
+
+
+    m_visualizer->show();
 }
 
 void CWaveController::processPendingDatagrams() 
@@ -62,8 +70,8 @@ void CWaveController::processPendingDatagrams()
             int x = parts[0].toInt();
             int y = parts[1].toInt();
             int isPinch = parts[2].toInt();
-
-            double normalizedY = 1.0 - (static_cast<double>(y) / 800.0);
+            //TODO 400 is python's window size - make this a constant
+            double normalizedY = 1.0 - (static_cast<double>(y) / 400.0);
             normalizedY = std::max(0.0, std::min(1.0, normalizedY));
             
             int totalNotes = PENTATONIC_RATIOS.size() * 3;

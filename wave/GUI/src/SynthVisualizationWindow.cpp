@@ -1,8 +1,11 @@
 #include "SynthVisualizationWindow.h"
+#include "AudioConsumer.h"
+// #include "AudioGenerator.h"
 
-CSynthVisualizationWindow::CSynthVisualizationWindow(CAudioGenerator* audioGen, int numHarmonics, QWidget* parent)
+CSynthVisualizationWindow::CSynthVisualizationWindow(CAudioConsumer* audioConsumer, CAudioGenerator* audioGenerator, int numHarmonics, QWidget* parent)
     : QMainWindow(parent)
-    , m_audioGenerator(audioGen)
+    , m_audioConsumer(audioConsumer)
+    , m_audioGenerator(audioGenerator)
     , m_numHarmonics(numHarmonics)
     , m_activeHarmonicCount(numHarmonics)
 {
@@ -52,7 +55,7 @@ void CSynthVisualizationWindow::setupUI()
     auto* waveformBox = new QGroupBox("Time Domain");
     auto* waveformLayout = new QVBoxLayout(waveformBox);
     
-    m_waveformView = new CWaveform();
+    // m_waveformView = new CWaveform();
     
     const QColor harmonicColors[] = 
     {
@@ -69,29 +72,29 @@ void CSynthVisualizationWindow::setupUI()
     for (int i = 0; i < m_numHarmonics; ++i) 
     {
         const QString name = QString("H%1 (%2 Hz)").arg(i + 1).arg(440 * (i + 1));
-        m_waveformView->addChannel(name.toStdString(), harmonicColors[i % AudioConstants::MAX_HARMONICS]);
+        m_waveformView.addChannel(name.toStdString(), harmonicColors[i % AudioConstants::MAX_HARMONICS]);
     }
 
     
-    waveformLayout->addWidget(m_waveformView);
+    waveformLayout->addWidget(&m_waveformView);
     splitter->addWidget(waveformBox);
 
     auto* spectrumBox = new QGroupBox("Frequency Domain");
     auto* spectrumLayout = new QVBoxLayout(spectrumBox);
     
-    m_spectrumAnalyzer = new CSpectrumAnalyzer(44100);
-    m_spectrumAnalyzer->setLogScale(true);
-    m_spectrumAnalyzer->setShowPeaks(true);
-    m_spectrumAnalyzer->setFrequencyRange(20, 8000);
+    // m_spectrumAnalyzer = new CSpectrumAnalyzer(44100);
+    m_spectrumAnalyzer.setLogScale(true);
+    m_spectrumAnalyzer.setShowPeaks(true);
+    m_spectrumAnalyzer.setFrequencyRange(20, 8000);
     
-    spectrumLayout->addWidget(m_spectrumAnalyzer);
+    spectrumLayout->addWidget(&m_spectrumAnalyzer);
     splitter->addWidget(spectrumBox);
         
     auto* controlBox = new QGroupBox("Harmonic Controls");
     auto* controlLayout = new QVBoxLayout(controlBox);
     
-    m_harmonicPanel = new CHarmonicControlPanel(m_numHarmonics);
-    controlLayout->addWidget(m_harmonicPanel);
+    // m_harmonicPanel = new CHarmonicControlPanel(m_numHarmonics);
+    controlLayout->addWidget(&m_harmonicPanel);
     
     splitter->addWidget(controlBox);
 
@@ -100,22 +103,35 @@ void CSynthVisualizationWindow::setupUI()
     splitter->setStretchFactor(2, 3);
     
     mainLayout->addWidget(splitter);
+
+    m_audioConsumer->setWaveform(m_waveformView);
+    m_audioConsumer->setSpectrumAnalyzer(m_spectrumAnalyzer);
+    m_audioConsumer->setHarmonicControlPanel(m_harmonicPanel);
+
+    // Set buffers: audioOutputBuffer (int16_t), mixedBuffer (double), harmonicBuffers (double array)
+    m_audioConsumer->setAudioOutputBuffer(*m_audioGenerator->getAudioOutputBuffer());
+    m_audioConsumer->setMixedBuffer(*m_audioGenerator->getMixedBuffer());
+    m_audioConsumer->setHarmonicBuffers(*m_audioGenerator->getHarmonicBuffers());
 }
 
 void CSynthVisualizationWindow::connectSignals() 
 {
-    connect(m_harmonicPanel, &CHarmonicControlPanel::parametersChanged, this, &CSynthVisualizationWindow::updateAudioParameters);
-    connect(m_harmonicPanel, &CHarmonicControlPanel::harmonicChanged, this, [this](int harmonic) 
+    // Audio consumption signal ensures GUI stays synchronized with playback
+    // Queued connection since it comes from audio thread
+    connect(m_audioConsumer, &CAudioConsumer::requestGuiUpdate, this, &CSynthVisualizationWindow::updateVisualizations, Qt::QueuedConnection);
+    
+    connect(&m_harmonicPanel, &CHarmonicControlPanel::parametersChanged, this, &CSynthVisualizationWindow::updateAudioParameters);
+    connect(&m_harmonicPanel, &CHarmonicControlPanel::harmonicChanged, this, [this](int harmonic) 
     {
         Q_UNUSED(harmonic);
         updateAudioParameters();
     });
-    connect(m_harmonicPanel, &CHarmonicControlPanel::harmonicCountChanged, this, &CSynthVisualizationWindow::updateActiveHarmonics);
+    connect(&m_harmonicPanel, &CHarmonicControlPanel::harmonicCountChanged, this, &CSynthVisualizationWindow::updateActiveHarmonics);
 }
 
 void CSynthVisualizationWindow::startVisualization() 
 {
-
+    //This timer may be required later ot separate Audio and GUI Threads - however its not hooked up to anything currently
     connect(&CTimer::instance(), &CTimer::timeout, this, &CSynthVisualizationWindow::updateVisualizations);
     CTimer::instance().start();
 }
@@ -129,8 +145,8 @@ void CSynthVisualizationWindow::updateAudioParameters()
     
     for (int i = 0; i < m_numHarmonics; ++i) 
     {
-        const double amplitude = m_harmonicPanel->getHarmonicAmplitude(i + 1);
-        const double phase = m_harmonicPanel->getHarmonicPhase(i + 1);
+        const double amplitude = m_harmonicPanel.getHarmonicAmplitude(i + 1);
+        const double phase = m_harmonicPanel.getHarmonicPhase(i + 1);
         
         const bool withinActiveCount = (i < m_activeHarmonicCount);
         
@@ -147,66 +163,41 @@ void CSynthVisualizationWindow::updateActiveHarmonics(int count)
     for (int i = 0; i < m_numHarmonics; ++i) 
     {
         const bool withinActiveCount = (i < m_activeHarmonicCount);
-        const bool hasAmplitude = m_harmonicPanel->getHarmonicAmplitude(i + 1) > 0.01;
-        m_waveformView->setChannelVisible(i + 1, withinActiveCount && hasAmplitude);
+        const bool hasAmplitude = m_harmonicPanel.getHarmonicAmplitude(i + 1) > 0.01;
+        m_waveformView.setChannelVisible(i + 1, withinActiveCount && hasAmplitude);
         
         m_audioGenerator->setHarmonicEnabled(i, withinActiveCount && hasAmplitude);
     }
 }
 
-void CSynthVisualizationWindow::updateVisualizations() {
-    if (!m_audioGenerator) 
-    {
-        return;
-    }
+void CSynthVisualizationWindow::updateVisualizations() 
+{
+    // Update spectrum analyzer and mixed waveform from separate mixed buffer
+    m_spectrumAnalyzer.updateFromRingBuffer(*m_audioGenerator->getMixedBuffer());
+    m_waveformView.updateChannelFromBuffer(0, *m_audioGenerator->getMixedBuffer());
     
-    // static int updateCount = 0;
-    // if (++updateCount % 60 == 0) 
-    // {
-    //     qDebug() << "SynthVisualizerWindow::updateVisualizations() - count:" << updateCount;
-    // }
-    
-    if (auto* mixedBuffer = m_audioGenerator->getMixedBuffer()) 
-    {
-        // size_t availableSamples = mixedBuffer->getAvailableRead();
-        // if (updateCount % 60 == 0) 
-        // {
-        //     qDebug() << "  Mixed buffer available samples:" << availableSamples;
-        // }
-
-        m_spectrumAnalyzer->updateFromRingBuffer(*mixedBuffer);        
-        m_waveformView->updateChannelFromBuffer(0, *mixedBuffer);
-    }
-    
+    // Update individual harmonic waveforms (indices 0-7)
     for (int i = 0; i < m_numHarmonics; ++i) 
     {
-        if (auto* harmonicBuffer = m_audioGenerator->getHarmonicBuffer(i)) 
-        {
-            m_waveformView->updateChannelFromBuffer(i + 1, *harmonicBuffer);
-            
-            const bool withinActiveCount = (i < m_activeHarmonicCount);
-            const bool hasAmplitude = m_harmonicPanel->getHarmonicAmplitude(i + 1) > 0.01;
-            m_waveformView->setChannelVisible(i + 1, withinActiveCount && hasAmplitude);
-        }
+        const bool withinActiveCount = (i < m_activeHarmonicCount);
+        const bool hasAmplitude = m_harmonicPanel.getHarmonicAmplitude(i + 1) > 0.01;
+
+        // Harmonic i (0-7) is now directly at harmonicBuffers[i]
+        m_waveformView.updateChannelFromBuffer(i + 1, *m_audioGenerator->getHarmonicBuffer(i));
+        m_waveformView.setChannelVisible(i + 1, withinActiveCount && hasAmplitude);
     }
+    
+    // Trigger widget repaints
+    m_spectrumAnalyzer.update();
+    m_waveformView.refresh();
 }
 
 void CSynthVisualizationWindow::setFundamental(double frequency) 
 {
-    if (m_audioGenerator) 
-    {
+
         m_audioGenerator->setFundamental(frequency);
-    }
-    
-    if (m_harmonicPanel) 
-    {
-        m_harmonicPanel->setFundamental(frequency);
-    }
-    
-    if (m_spectrumAnalyzer) 
-    {
-        m_spectrumAnalyzer->setHarmonicMarkers(frequency, m_numHarmonics);
-    }
+        m_harmonicPanel.setFundamental(frequency);
+        m_spectrumAnalyzer.setHarmonicMarkers(frequency, m_numHarmonics);
 }
 
 void CSynthVisualizationWindow::setMasterAmplitude(double amplitude) {
@@ -227,25 +218,25 @@ void CSynthVisualizationWindow::setEffects(double distortion, double filter, dou
 
 void CSynthVisualizationWindow::toggleRecording() 
 {
-    if (!m_audioGenerator) 
+    if (!m_audioConsumer) 
     {
         return;
     }
     
-    if (m_audioGenerator->isRecording()) 
+    if (m_audioConsumer->isRecording()) 
     {
-        m_audioGenerator->stopRecording();
+        m_audioConsumer->stopRecording();
         m_recordButton->setText("Record");
         m_recordButton->setChecked(false);
         
-        QString savedPath = m_audioGenerator->getLastRecordingPath();
+        QString savedPath = m_audioConsumer->getLastRecordingPath();
         m_recordingStatusLabel->setText(QString("Saved: %1").arg(savedPath));
         
     } 
 
     else 
     {
-        if (m_audioGenerator->startRecording()) 
+        if (m_audioConsumer->startRecording()) 
         {
             m_recordButton->setChecked(true);
             m_recordButton->setText("Stop Recording");

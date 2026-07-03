@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QPainter>
+#include <QPainterPath>
 #include <QTimer>
 #include <QTabBar>
 #include <QVBoxLayout>
@@ -12,6 +13,7 @@
 #include <memory>
 #include <atomic>
 #include "Buffer.h"
+#include "Constants.h"
 #include "Timer.h"
 
 class CWaveform;
@@ -56,26 +58,21 @@ public:
         std::string name;
         bool visible = true;
 
-        std::atomic<bool> swapRequested;
-
-        std::vector<double> backBuffer;
-        std::vector<double> frontBuffer;
-
+        // Large buffer to hold captured samples from ring buffer
+        std::array<double, AudioConstants::BUFFER_SIZE> buffer;
+        size_t writePos = 0;  // Current write position for new samples
         
         WaveformChannel(const std::string& n, const QColor& c) 
                         : name(n)
                         , color(c)
-                        , swapRequested(false)
-                        , frontBuffer(AudioConstants::DISPLAY_SAMPLES, 0.0)
-                        , backBuffer(AudioConstants::DISPLAY_SAMPLES, 0.0) {}
+        {
+            buffer.fill(0.0);
+        }
     };
     
     friend class CWaveformDisplay;
     explicit CWaveform(QWidget* parent = nullptr);
 
-    // Find the index where signal crosses trigger level
-    size_t findTriggerPoint(const std::vector<double>& samples) const;
-    
     // Add a new waveform channel with name and color
     void addChannel(const std::string& name, const QColor& color);
 
@@ -83,7 +80,7 @@ public:
     void updateChannel(size_t channelIndex, const std::vector<double>& samples);
     
     // Update channel data from the buffer
-    void updateChannelFromBuffer(size_t channelIndex, CBuffer& buffer);
+    void updateChannelFromBuffer(size_t channelIndex, CBuffer<double>& buffer);
 
     // Set vertical scale factor
     void setYScale(double scale) { m_yScale = scale; };
@@ -93,18 +90,16 @@ public:
     
     // Show or hide a specific channel
     void setChannelVisible(size_t index, bool visible);
-    
-    // Set the trigger level
-    void setTriggerLevel(double level) { m_triggerLevel = level; };
-    
-    // Enable or disable the trigger display sync
-    void setTriggerEnabled(bool enable) { m_triggerEnabled = enable; };
 
     // Change the display mode sucvh as Solo, Separate orCombined 
     void setDisplayMode(DisplayMode mode);
 
     // Get the current display mode
     DisplayMode getDisplayMode() const { return m_displayMode; }
+    
+    // Trigger repaint of waveform display
+    void refresh();
+    
 protected:
     void resizeEvent(QResizeEvent* event) override;
 
@@ -118,16 +113,16 @@ private:
     void drawLabels(QPainter& painter, int h);
 
     bool m_autoScale;
-    bool m_triggerEnabled;
     
     double m_yScale;
-    double m_triggerLevel;
     
     QTabBar* m_tabBar;
     DisplayMode m_displayMode;
     CWaveformDisplay* m_waveformWidget;
     
     std::vector<std::unique_ptr<WaveformChannel>> m_channels;
-    std::vector<double> m_discardBuffer = std::vector<double>(512, 0.0);
+    
+    // Display window position that advances each frame for smooth scrolling
+    size_t m_displayWindowPos = 0;
 };
 

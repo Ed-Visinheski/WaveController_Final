@@ -17,6 +17,7 @@
 #include "AudioGenerator.h"
 #include "Constants.h"
 #include "SpectrumAnalyzer.h"
+#include "AudioConsumer.h"
 #include "Timer.h"
 
 /**
@@ -28,7 +29,7 @@ class CSynthVisualizationWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit CSynthVisualizationWindow(CAudioGenerator* audioGen, int numHarmonics = AudioConstants::NUM_HARMONICS, QWidget* parent = nullptr);
+    explicit CSynthVisualizationWindow(CAudioConsumer* audioConsumer, CAudioGenerator* audioGenerator, int numHarmonics = AudioConstants::NUM_HARMONICS, QWidget* parent = nullptr);
 
 private:
     void setupUI();
@@ -40,17 +41,18 @@ private:
     int m_numHarmonics;
     int m_activeHarmonicCount;
 
+    CAudioConsumer* m_audioConsumer;
     CAudioGenerator* m_audioGenerator;    
-    CWaveform* m_waveformView {nullptr};
-    CSpectrumAnalyzer* m_spectrumAnalyzer = nullptr;
-    CHarmonicControlPanel* m_harmonicPanel {nullptr};
+
+    CWaveform m_waveformView;
+    CSpectrumAnalyzer m_spectrumAnalyzer;
+    CHarmonicControlPanel m_harmonicPanel;
     
     QPushButton* m_recordButton {nullptr};
     QLabel* m_recordingStatusLabel {nullptr};
     
 
 public slots:
-
     // Set the fundamental frequency for all harmonics
     void setFundamental(double frequency);
 
@@ -61,11 +63,11 @@ public slots:
     void setEffects(double distortion, double filter, double reverb);
 
 private slots:
-
     // Toggle audio recording on or off
     void toggleRecording();
-
+    
     // Update all visualization widgets
     void updateVisualizations();
+
 };
 

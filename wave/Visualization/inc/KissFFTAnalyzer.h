@@ -1,6 +1,7 @@
 #pragma once
 #include "kiss_fft.h"
 #include <vector>
+#include "Constants.h"
 
 /**
  * CKissFFTAnalyzer: FFT analysis wrapper using the KissFFT library
@@ -27,7 +28,7 @@ public:
     const std::vector<double>& getMagnitudes() const;
 
     // Compute magnitude spectrum from audio samples
-    const std::vector<double>& computeMagnitudeSpectrum(const std::vector<double>& samples);
+    const std::vector<double>& computeMagnitudeSpectrum(const std::array<double, AudioConstants::FFT_SIZE>& samples);
     
     // Find the spectrum peaks above a threshold
     std::vector<std::pair<size_t, double>> findPeaks(double minMagnitude, size_t minSpacing) const;

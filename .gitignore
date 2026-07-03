@@ -3,3 +3,4 @@ build
 .cache
 TEST_*
 recordings
+.DS_Store

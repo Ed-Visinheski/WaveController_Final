@@ -24,10 +24,10 @@ public:
     explicit CSpectrumAnalyzer(double sampleRate = AudioConstants::SAMPLE_RATE, QWidget* parent = nullptr);
 
     // Update spectrum from the vector of audio samples
-    void updateFromSamples(const std::vector<double>& samples);
+    void updateFromSamples(const std::array<double, AudioConstants::FFT_SIZE>& samples);
 
     // Update spectrum from the buffer
-    void updateFromRingBuffer(CBuffer& ringBuffer);
+    void updateFromRingBuffer(CBuffer<double>& ringBuffer);
     
     // Enable or disable logarithmic frequency scale
     void setLogScale(bool log);

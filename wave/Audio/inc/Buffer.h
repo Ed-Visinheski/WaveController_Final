@@ -11,20 +11,20 @@
  * 
  */
 
-
+template<class T>
 class CBuffer 
 {
 public:
     explicit CBuffer();
 
     //Copies incoming data to storage, increases write index
-    size_t write(const double* data, size_t count);
+    size_t write(const T* data, size_t count);
 
     //Copies stored samples and advances readIndex
-    size_t read(double* data, size_t count);
+    size_t read(T* data, size_t count);
 
     //Copies samples without advancing the read index
-    size_t peek(double* data, size_t count) const;
+    size_t peek(T* data, size_t count) const;
 
     //returns number of Elements that can be read from
     size_t getAvailableRead() const;
@@ -41,7 +41,7 @@ private:
     size_t calculateAvailableWrite(size_t writeIndex, size_t readIndex) const;
 
     static constexpr size_t RING_BUFFER_CAPACITY {AudioConstants::BUFFER_SIZE + 1};
-    std::array<double, RING_BUFFER_CAPACITY> m_buffer{};
+    std::array<T, RING_BUFFER_CAPACITY> m_buffer{};
     std::atomic<size_t> m_writeIndex;
     std::atomic<size_t> m_readIndex;
 };
